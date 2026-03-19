@@ -1,0 +1,10 @@
+# Ignore the log files
+*.log
+*.jsonl
+
+# Ignore your private environment variables
+.env
+
+# Ignore Python cache folders
+__pycache__/
+*.pyc
