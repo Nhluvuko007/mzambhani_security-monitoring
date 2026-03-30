@@ -4,6 +4,8 @@ import json
 import os
 import requests
 from dotenv import load_dotenv
+from pymongo import MongoClient
+import urllib.parse
 from collections import defaultdict
 
 # Load the variables from .env file
@@ -20,6 +22,32 @@ webhook_url = os.getenv("discord_webhook_url")
 if not webhook_url:
     print("ERROR: discord_webhook_url not found in .env file!")
     exit()
+
+# 2. Get the pieces from .env (Change your .env to separate them!)
+# It's much easier to manage them individually
+# Retrieve from .env
+user = os.getenv("MONGO_USER")
+password = os.getenv("MONGO_PASS")
+cluster = os.getenv("MONGO_CLUSTER")
+
+# Load MongoDB
+# Safely encode special characters in the password/username
+safe_user = urllib.parse.quote_plus(user)
+safe_pass = urllib.parse.quote_plus(password)
+
+# Construct the URI
+MONGO_URI = f"mongodb+srv://{safe_user}:{safe_pass}@{cluster}/?appName=Mzambhani"
+
+try:
+    client = MongoClient(MONGO_URI)
+    db = client["SecurityDB"]
+    # Quick test connection
+    client.admin.command('ping')
+    print("✅ Successfully connected to MongoDB Atlas!")
+except Exception as e:
+    print(f"❌ Connection Error: {e}")
+
+alerts_collection = db["alerts"]
 
 # This regex extracts: [Status], [User], and [IP Address]
 log_pattern = r"(Failed|Accepted) password for (\w+) from ([\d\.]+)"
@@ -45,6 +73,22 @@ def trigger_alert(ip, count):
     """Logs the threat and sends a Discord alert."""
     alert_msg = f"[ALERT] Brute force detected from IP: {ip} ({count} failed attempts)"
     print(f"\n{alert_msg}\n")
+
+    # 1. Prepare the Data Object
+    alert_data = {
+        "ip": ip,
+        "attempts": count,
+        "timestamp": time.ctime(),
+        "type": "Brute Force",
+        "severity": "High"
+    }
+
+    # 2. Push to MongoDB
+    try:
+        alerts_collection.insert_one(alert_data)
+        print("💾 Alert synced to MongoDB.")
+    except Exception as e:
+        print(f"❌ MongoDB Sync Error: {e}")
 
     # Save the bad IP to a 'blacklisted' file
     blacklist_data = {"ip": ip, "reason": "Brute Force", "attempts": count, "timestamp": time.ctime()}

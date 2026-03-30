@@ -4,7 +4,24 @@
 
 # Ignore your private environment variables
 .env
+.env.local
+
+backend/
+.env
+node_modules/
+
+frontend/
+node_modules/
+
+# Ignore build folders
+build/
+dist/
 
 # Ignore Python cache folders
 __pycache__/
-*.pyc
+*.py[cod]
+*.$py.class
+venv/
+ENV/
+
+.vscode
