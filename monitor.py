@@ -23,15 +23,12 @@ if not webhook_url:
     print("ERROR: discord_webhook_url not found in .env file!")
     exit()
 
-# 2. Get the pieces from .env (Change your .env to separate them!)
-# It's much easier to manage them individually
 # Retrieve from .env
 user = os.getenv("MONGO_USER")
 password = os.getenv("MONGO_PASS")
 cluster = os.getenv("MONGO_CLUSTER")
 
 # Load MongoDB
-# Safely encode special characters in the password/username
 safe_user = urllib.parse.quote_plus(user)
 safe_pass = urllib.parse.quote_plus(password)
 
